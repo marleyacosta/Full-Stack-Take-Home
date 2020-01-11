@@ -1,0 +1,16 @@
+{
+  "name": "takehomerest",
+  "version": "0.0.1",
+  "private": true,
+  "main": "app.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "dependencies": {
+    "express": "^4.16.4",
+    "level": "^6.0.0",
+    "lokijs": "^1.5.8",
+    "request": "^2.88.0",
+    "shortid": "^2.2.15"
+  }
+}
