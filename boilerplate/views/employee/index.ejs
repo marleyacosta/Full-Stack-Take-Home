@@ -2,19 +2,22 @@
 <html>
   <head>
     <title>Employee Database</title>
+    <link rel="icon" href="data:,">
     <link rel='stylesheet' href='/stylesheets/style.css' />
-    <link rel="stylesheet" href="datepicker.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
+    integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47"
+    crossorigin="anonymous">
   </head>
   <body onload="validDate()">
-    <div class="container">
+    <div align="center" class="container">
         <h1>Employee List</h1>
         <form action="/api/employees" method="get">
         <%
         var list = employees.find();
         if(list.length>0) { %>
-        <table>
-          <thead>
-            <tr>
+        <table width="90%" class="pure-table pure-table-bordered">
+          <thead align="center">
+            <tr align="center">
               <th>Id</th>
               <th>First Name</th>
               <th>Last Name</th>
@@ -43,16 +46,19 @@
         <% } else { %>
           <div>No employees found.</div><br />
         <% } %>
-        <input type="submit" value="Find All" /><br /><br />
+        <div class='form-row'>
+        <button>Find Employee List</button> <br />
+      </div>
         </form>
         <h1>Create New Employee</h1>
+        <div class='form-row'>
         <form action="/api/employees" method="post" enctype='application/json'>
 
                 <label for="firstName">First Name : </label><input id="firstName" type="text" name="firstName" /><br /><br />
                 <label for="lastName">Last Name : </label><input id="lastName" type="text" name="lastName" /><br /><br />
                 <label for="hireDate">Hire Date : </label><input name="hireDate" id="hireDate" type="date" /><br /><br />
                 <label for="role">Role : </label>
-                    <select class="selectpicker" data-style="btn-info" name="role">
+                    <select class="selectpicker" id="roleDropDown" data-style="btn-info" name="role">
                         <optgroup label="Select Role">
                             <option name="lackey-option" value="LACKEY">LACKEY</option>
                             <option name="manager-option" value="MANAGER">MANAGER</option>
@@ -60,41 +66,22 @@
                             <option id="ceo" name="ceo-option" value="CEO">CEO</option>
                         </optgroup>
                     </select><br /><br />
+                    <div class='form-row'>
                     <button>Create</button> <br />
+                  </div>
 
         </form>
-
-        <h1>Find By Id</h1>
-
-        <form id = "findByIdForm" method='get' onsubmit="appendIdToPath('findByIdForm','findId')">
-          <label for="id">Id : </label>
-          <input type="text" id="findId">
-          <input type="submit" value="Search">
-        </form>
-        <h1>Update By Id </h1>
-        <label for="id">Id : </label>
-        <input  type="text"  id="updateById"/>
-        <input type="submit" value="Update" />
-     
-   
-
+      </div>
     </div>
-    <script src="datepicker.min.js"></script>
+
     <script>
-    function appendIdToPath(form, id){
-      var action_src = "http://localhost:3000/api/employees/" + document.getElementById(id).value;
-      var your_form = document.getElementById(form);
-      your_form.action = action_src ;
-    }
+
     function validDate(){
         var maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() - 2);
+        maxDate.setDate(maxDate.getDate() - 1);
         document.getElementsByName("hireDate")[0].setAttribute('max', maxDate.toISOString().split('T')[0]);
 
     }
-
-
-
     </script>
   </body>
 </html>
