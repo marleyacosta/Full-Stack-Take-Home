@@ -36,14 +36,6 @@ router.post('', function(req, res) {
     }
 
   }*/
-  if (Object.keys(req.body).length === 0) {
-    if(new Date(req.body.hireDate) >= new Date(Date.now())){
-
-      console.log("Error: The date must be in the past");
-        return res.send(employees.find());
-    }
-  }
-
 
   employeeDict["identifier"] = shortid.generate();
   employeeDict["firstName"] = req.body.firstName;
@@ -108,7 +100,7 @@ router.get('/:id', function(req, res) {
 
   var employee = employees.find({"identifier": id});
   console.log(employee);
-  res.render("../views/employee/show", {employee: employee});
+  res.render("../views/employee/show", {employee: employee[0]});
   //return res.send(employees.find({"identifier": id}));
 });
 
@@ -128,13 +120,20 @@ router.put('/:id', function(req, res) {
 
   }
   employees.update(originalEmployee);
+  res.render("../views/employee/update", {employee: originalEmployee});
   return res.send(employees.find({"identifier": id}));
 });
 
 /*delete the record corresponding to the id parameter*/
 router.delete('/:id', function(req, res) {
 
-  return res.send(employees.findAndRemove({'identifier': req.params.id}));
+  var id = req.params.id;
+
+  var employee = employees.find({"identifier": id});
+  employees.findAndRemove({'identifier': id});
+  res.render("../views/employee/delete", {id: id});
+
+  //return res.send(employees.findAndRemove({'identifier': req.params.id}));
 });
 
 module.exports = router;

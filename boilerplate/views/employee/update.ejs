@@ -6,32 +6,34 @@
   </head>
   <body>
     <div class="container">
-      <h3><a href="/employees">Employee List</a></h3>
+      <h3><a href="/api/employees">Employee List</a></h3>
       <h1>Update Employee</h1>
-      <form action="/employees/update/<%= employee._id%>" method="post">
-        <table>
-          <tbody>
-            <tr>
-              <td>Name</td>
-              <td><input type="text" name="name" value="<%= employee.name %>" /></td>
-            </tr>
-            <tr>
-              <td>Address</td>
-              <td><textarea name="address"><%= employee.address %></textarea></td>
-            </tr>
-            <tr>
-              <td>Position</td>
-              <td><input type="text" name="position" value="<%= employee.position %>" /></td>
-            </tr>
-            <tr>
-              <td>Salary</td>
-              <td><input type="number" name="salary" value="<%= employee.salary %>" /></td>
-            </tr>
-            <tr>
-              <td colspan="2"><button type="submit">Update</button></td>
-            </tr>
-          </tbody>
-        </table>
+      <table>
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Hire Date</th>
+            <th>Role</th>
+            <th>Favorite Joke</th>
+            <th>Favorite Quote</th>
+
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><%= employee.identifier%></td>
+            <td><%= employee.firstName%></td>
+            <td><%= employee.lastName%></td>
+            <td><%= employee.hireDate%></td>
+            <td><%= employee.role%></td>
+            <td><%= employee.favoriteJoke%></td>
+            <td><%= employee.favoriteQuote%></td>
+          </tr>
+        </tbody>
+      </table>
+
       </form>
     </div>
   </body>
