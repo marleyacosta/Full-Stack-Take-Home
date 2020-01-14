@@ -27,35 +27,38 @@ router.post('', function(req, res) {
 
   var employeeDict = {};
 
-  if(req.query.role.toUpperCase() === 'ceo'.toUpperCase()){
 
-    if(employees.find({"role": { '$in' : [req.query.role.toUpperCase(), req.query.role.toLowerCase()]}})){
+  /*if(roleString.toUpperCase() === 'ceo'.toUpperCase()){
+
+    if(employees.find({"role": { '$in' : [roleString.toUpperCase(), roleString.toLowerCase()]}})){
       console.log("Error: There can only be one CEO");
       return res.send(employees.find());
     }
 
+  }*/
+  if (Object.keys(req.body).length === 0) {
+    if(new Date(req.body.hireDate) >= new Date(Date.now())){
+
+      console.log("Error: The date must be in the past");
+        return res.send(employees.find());
+    }
   }
 
-  if(new Date(req.query.hireDate) >= new Date(Date.now())){
-
-    console.log("Error: The date must be in the past");
-      return res.send(employees.find());
-  }
 
   employeeDict["identifier"] = shortid.generate();
-  employeeDict["firstName"] = req.query.firstName;
-  employeeDict["lastName"] = req.query.lastName;
-  employeeDict["hireDate"] = req.query.hireDate;
-  employeeDict["role"] = req.query.role;
+  employeeDict["firstName"] = req.body.firstName;
+  employeeDict["lastName"] = req.body.lastName;
+  employeeDict["hireDate"] = req.body.hireDate;
+  employeeDict["role"] = req.body.role;
 
-  
+
 
   let jokeOptions = {
-    url: 'https://icanhazdadjoke.com/', 
+    url: 'https://icanhazdadjoke.com/',
     method: 'GET',
     headers: {
-        'Accept': 'application/json', 
-        
+        'Accept': 'application/json',
+
     },
     json: true
 }
@@ -65,8 +68,8 @@ router.post('', function(req, res) {
    if (!error && response.statusCode === 200) {
         console.log(body.joke);
         employeeDict["favoriteJoke"] = body.joke;
-        
-        
+
+
     }
     else{
       console.log(error);
@@ -74,13 +77,13 @@ router.post('', function(req, res) {
     }
 });
 
-                    
+
 let quoteOptions = {
-  url: 'https://ron-swanson-quotes.herokuapp.com/v2/quotes', 
+  url: 'https://ron-swanson-quotes.herokuapp.com/v2/quotes',
   method: 'GET',
   headers: {
-      'Accept': 'application/json', 
-      
+      'Accept': 'application/json',
+
   }
 }
 var quote = request(quoteOptions, function(error, response, body){
@@ -88,21 +91,25 @@ var quote = request(quoteOptions, function(error, response, body){
       console.log(error);
   } else if (!error && response.statusCode === 200) {
       employeeDict["favoriteQuote"] = JSON.parse(body)[0];
-      
+
   }
 });
 
 
   employees.insert(employeeDict);
 
-     
-  return res.send(employees.find());
+  res.render("../views/employee/index", {employees: employees});
+  //return res.send(employees.find());
 });
 
 /* Return the record corresponding to the id parameter */
 router.get('/:id', function(req, res) {
   var id = req.params.id;
-  return res.send(employees.find({"identifier": id}));
+
+  var employee = employees.find({"identifier": id});
+  console.log(employee);
+  res.render("../views/employee/show", {employee: employee});
+  //return res.send(employees.find({"identifier": id}));
 });
 
 /*Replace the record corresponding to :id with the contents of the PUT body*/

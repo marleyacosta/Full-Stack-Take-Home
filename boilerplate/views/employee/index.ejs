@@ -5,10 +5,11 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel="stylesheet" href="datepicker.min.css">
   </head>
-  <body>
+  <body onload="validDate()">
     <div class="container">
         <h1>Employee List</h1>
-        <% 
+        <form action="/api/employees" method="get">
+        <%
         var list = employees.find();
         if(list.length>0) { %>
         <table>
@@ -21,11 +22,11 @@
               <th>Role</th>
               <th>Favorite Joke</th>
               <th>Favorite Quote</th>
-  
+
             </tr>
           </thead>
           <tbody>
-  
+
             <% for(var i=0; i<list.length;i++) { %>
               <tr>
                 <td><%= list[i].identifier%></td>
@@ -43,47 +44,31 @@
           <div>No employees found.</div>
         <% } %>
         <input type="submit" value="Find All" />
+        </form>
         <h1>Create New Employee</h1>
-        <form action="/employees/save" method="post">
-          <table>
-            <tbody>
-              <tr>
-                <td>First Name</td>
-                <td><input type="text" name="firstName" /></td>
-              </tr>
-              <tr>
-                <td>Last Name</td>
-                <td><input type='text' name="lastName"></input></td>
-              </tr>
-              <tr>
-                <td>Hire Date</td>
-                <td><input  type="date" value="YYYY-MM-DD" id="hireDate"/></td>
-              </tr>
-              <tr>
-                <td>Role</td>
-                <td>
-                    <select class="selectpicker" data-style="btn-info" name="selectpicker">
+        <form action="/api/employees" method="post" enctype='application/json'>
+
+                <input id="firstName" type="text" name="firstName" /><br />
+                <input id="lastName" type="text" name="lastName" /><br />
+                <label for="hireDate">Hire Date : </label><input name="hireDate" id="hireDate" type="date" /><br />
+
+                    <select class="selectpicker" data-style="btn-info" name="role">
                         <optgroup label="Select Role">
-                            <option name="lackey-option" value="0">LACKEY</option>
-                            <option name="manager-option" value="1">MANAGER</option>
-                            <option name="vp-option" value="2">VP</option>
-                            <option name="ceo-option" value="3">CEO</option>
+                            <option name="lackey-option" value="LACKEY">LACKEY</option>
+                            <option name="manager-option" value="MANAGER">MANAGER</option>
+                            <option name="vp-option" value="VP">VP</option>
+                            <option name="ceo-option" value="CEO">CEO</option>
                         </optgroup>
                     </select>
+                    <button>Create</button>
 
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2"><input type="submit" value="Save" /></td>
-              </tr>
-            </tbody>
-          </table>
         </form>
-       
-        <h3><a href="/<%= employees.identifier%>">Find By Id</a></h3>
-        <form action="/<%= employees.identifier%>" method="get">
-          <input type='text' name="lastName"></input>  
-          <button type="submit">Find By Id</button>
+
+        <h3>Find By Id</h3>
+
+        <form id = "findByIdForm" onsubmit="appendIdToPath()">
+          <input type="text" name="identifier">
+          <input type="submit" value="Search">
         </form>
         <h1>Update By Id </h1>
         <input  type="text"  id="updateById"/>
@@ -93,6 +78,20 @@
         <input type="submit" value="Delete" />
 
     </div>
-    <script src="datepicker.min.js"></script> 
+    <script src="datepicker.min.js"></script>
+    <script>
+    function appendIdToPath(){
+      var action_src = "http://localhost:3000/api/employees/" + document.getElementsByName("identifier")[0].value;
+      var your_form = document.getElementById("findByIdForm");
+      your_form.action = action_src ;
+    }
+    function validDate(){
+        var maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() - 1);
+        document.getElementsByName("hireDate")[0].setAttribute('max', maxDate.toISOString().split('T')[0]);
+
+  	}
+
+    </script>
   </body>
 </html>
