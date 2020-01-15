@@ -27,7 +27,7 @@ router.get('', function(req, res) {
   function onlyOneCEO(roleString, res){
     if(roleString.toUpperCase() == "CEO"){
       var ceoFound = employees.find({"role": { '$in' : [roleString.toUpperCase(), roleString.toLowerCase()]}});
-    
+
       if(ceoFound.length > 0){
         var message = "Error: There can only be one CEO";
         console.log(message);
@@ -36,7 +36,9 @@ router.get('', function(req, res) {
       }else{
         return true;
       }
-  
+
+    }else{
+      return true;
     }
   }
 
@@ -48,8 +50,8 @@ router.post('', async function(req, res) {
 
   var roleString = req.body.role;
   var date = req.body.hireDate;
-  if(!(onlyOneCEO(roleString.toString(), res) && validDate(date, res))){
-  
+  if((onlyOneCEO(roleString.toString(), res) && validDate(date, res))){
+
 
 
     employeeDict["identifier"] = shortid.generate();
@@ -67,10 +69,13 @@ router.post('', async function(req, res) {
           'Accept': 'application/json',
 
       },
-      json: true
+      json: true,
+      rejectUnauthorized: false
   }
 
-  await getFavoritesAPI(jokeOptions).then((body) => employeeDict["favoriteJoke"] = body.joke);
+  await getFavoritesAPI(jokeOptions)
+  .then((body) => employeeDict["favoriteJoke"] = body.joke)
+  .catch((e) => console.log(e.message));
 
   let quoteOptions = {
     url: 'https://ron-swanson-quotes.herokuapp.com/v2/quotes',
@@ -78,10 +83,13 @@ router.post('', async function(req, res) {
     headers: {
         'Accept': 'application/json',
 
-    }
+    },
+     rejectUnauthorized: false
   }
 
-  await getFavoritesAPI(quoteOptions).then( (body) => employeeDict["favoriteQuote"] = JSON.parse(body)[0]);
+  await getFavoritesAPI(quoteOptions)
+  .then( (body) => employeeDict["favoriteQuote"] = JSON.parse(body)[0])
+    .catch((e) => console.log(e.message));
 
     employees.insert(employeeDict);
 
@@ -95,7 +103,7 @@ router.post('', async function(req, res) {
     var response = request.get(options);
     return response;
   }catch(e) {
-    console.log(e.getMessage());
+    console.log(e.message);
   }
 }
 
@@ -103,25 +111,23 @@ router.post('', async function(req, res) {
 router.get('/:id', function(req, res) {
   var id = req.params.id;
 
-  var employee = employees.find({"identifier": id});
+  var record = employees.find({"identifier": id});
 
-  console.log(employee);
-  
-  if(employee[0] < 0){
-    res.render("../views/employee/show", {employee: employee[0]});
+  if(record.length > 0){
+    res.render("../views/employee/show", {employee: record[0]});
   }else{
     var message = "No employee found with Id: " + id;
     console.log(message);
     res.render("../views/employee/error", {error: message});
   }
-  
+
   //return res.send(employees.find({"identifier": id}));
 });
 
 function validDate(date, res){
   var maxDate = new Date();
   maxDate.setDate(maxDate.getDate() - 1);
-  
+
   if(new Date(date) > maxDate){
 
     var message = "The hire date, " + date + ", is not in the past.";
@@ -139,7 +145,7 @@ function validDate(date, res){
 router.put('/:id', function(req, res) {
   var id = req.params.id;
   var originalEmployee = employees.findObject({'identifier': id});
- 
+
   if(originalEmployee == null){
     var message = " The employee with Id: " + id + " was not found.";
     console.log(message);
@@ -168,7 +174,7 @@ router.put('/:id', function(req, res) {
   return res.send(employees.find({"identifier": id}));
   }
 
-  
+
 });
 
 /*delete the record corresponding to the id parameter*/
