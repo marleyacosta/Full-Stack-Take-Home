@@ -3,17 +3,24 @@
 const express = require('express');
 const router = express.Router();
 
+const {check, validationResult} = require('express-validator/check');
+
 const loki = require("lokijs");
 
-var db = new loki("employee.db");
+const db = new loki("employee.db");
 
-var employees = db.addCollection("employees");
+const employees = db.addCollection("employees");
 
-var shortid = require("shortid");
+const shortid = require("shortid");
 
-var request = require('request-promise');
+const request = require('request-promise');
 
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
+
+var sleep = require('sleep'); 
+
+
+
 
 /* GET employees listing. */
 router.get('', function(req, res) {
@@ -23,36 +30,88 @@ router.get('', function(req, res) {
   //return res.send(employees.find());
 });
 
+  function showErrorPage(message, res){
+    console.log(message);
+    res.render("../views/employee/error", {error: message});
+  }
 
-  function onlyOneCEO(roleString, res){
-    if(roleString.toUpperCase() == "CEO"){
-      var ceoFound = employees.find({"role": { '$in' : [roleString.toUpperCase(), roleString.toLowerCase()]}});
+  // Validate the roles case-insensitive and there can only be one CEO.
+  function validRole(roleString, res){
 
-      if(ceoFound.length > 0){
-        var message = "Error: There can only be one CEO";
-        console.log(message);
-        res.render("../views/employee/error", {error: message});
-        return false;
+    var tempRoleString = roleString.toUpperCase();
+    
+    var expectedRoles = ['CEO', 'VP', 'MANAGER', 'LACKEY'].includes(tempRoleString);
+    
+    if(expectedRoles){
+      if(tempRoleString == "CEO"){
+
+        var searchRegex = new RegExp(roleString, 'i');
+        var ceoFound = employees.find({"role": {'$regex': searchRegex}});
+  
+        if(ceoFound.length > 0){
+          showErrorPage("There can only be one CEO", res);
+          return false;
+        }else{
+          return true;
+        }
+  
       }else{
         return true;
       }
-
     }else{
-      return true;
+      showErrorPage("The role must be one of the following: CEO, VP, MANAGER, and LACKEY.", res);
+      return false;
     }
+    
   }
 
 
-/* Create a new record using a randomly generated unique identifier */
-router.post('', async function(req, res) {
+/* Create a new record using a randomly generated unique identifier and get async API responses*/
+router.post('',
+[
+  check('firstName').not().isEmpty().withMessage('First Name is required'),
+  check('firstName').isString().withMessage('First Name must be String'),
+  check('lastName').not().isEmpty().withMessage('Last Name is required'),
+  check('lastName').isString().withMessage('Last Name must be String'),
+  check('hireDate').not().isEmpty().withMessage('Hire Date is required'),
+  check('hireDate').isISO8601('yyyy-mm-dd').withMessage('Hire Date must be in yyyy-mm-dd'),
+  check('role').not().isEmpty().withMessage('Role is required'),
+  check('role').isString().withMessage('Role is must be String'),
+  
+],
+ async function(req, res) {
+
+  const errors = validationResult(req);
+    console.log(req.body);
+
+    // Create errors for html display
+    if (!errors.isEmpty()) {
+      var errorsList = '';
+
+      for (var i = 0; i < errors.array().length; i++) {
+        if(i == errors.array().length - 1 && i != 0){
+          errorsList += " and " + errors.array()[i].msg + ".";
+        }else if(i == errors.array().length - 1){
+          errorsList += errors.array()[i].msg + '.';
+        }else{
+          errorsList += errors.array()[i].msg + ', ';
+        }
+       
+      }
+      res.render("../views/employee/error", {error: errorsList});
+      //return res.status(422).jsonp(errors.array());
+    }else{
+
+    
 
   var employeeDict = {};
 
+
+
   var roleString = req.body.role;
+ 
   var date = req.body.hireDate;
-  if((onlyOneCEO(roleString.toString(), res) && validDate(date, res))){
-
-
+  if((validRole(roleString, res) && validDate(date, res))){
 
     employeeDict["identifier"] = shortid.generate();
     employeeDict["firstName"] = req.body.firstName;
@@ -95,9 +154,10 @@ router.post('', async function(req, res) {
 
     res.render("../views/employee/index", {employees: employees});
 }
-  //return res.send(employees.find());
+ } //return res.send(employees.find());
 });
 
+// This function helps get API responses
  function getFavoritesAPI(options) {
   try{
     var response = request.get(options);
@@ -116,23 +176,20 @@ router.get('/:id', function(req, res) {
   if(record.length > 0){
     res.render("../views/employee/show", {employee: record[0]});
   }else{
-    var message = "No employee found with Id: " + id;
-    console.log(message);
-    res.render("../views/employee/error", {error: message});
+   
+    showErrorPage("No employee found with Id: " + id, res);
   }
 
   //return res.send(employees.find({"identifier": id}));
 });
 
+// Validate the date is in the future
 function validDate(date, res){
   var maxDate = new Date();
   maxDate.setDate(maxDate.getDate() - 1);
 
   if(new Date(date) > maxDate){
-
-    var message = "The hire date, " + date + ", is not in the past.";
-    console.log(message);
-    res.render("../views/employee/error", {error: message});
+    showErrorPage("The hire date, " + date + ", is not in the past.", res);
     return false;
 
   }else{
@@ -141,37 +198,88 @@ function validDate(date, res){
 
 }
 
+
+
 /*Replace the record corresponding to :id with the contents of the PUT body*/
-router.put('/:id', function(req, res) {
+router.put('/:id',
+[
+  check('firstName').not().isEmpty().withMessage('First Name is required'),
+  check('firstName').isString().withMessage('First Name must be String'),
+  check('lastName').not().isEmpty().withMessage('Last Name is required'),
+  check('lastName').isString().withMessage('Last Name must be String'),
+  check('hireDate').not().isEmpty().withMessage('Hire Date is required'),
+  check('hireDate').isISO8601('yyyy-mm-dd').withMessage('Hire Date must be in yyyy-mm-dd'),
+  check('role').not().isEmpty().withMessage('Role is required'),
+  check('role').isString().withMessage('Role is must be String'),
+  
+],
+function(req, res) {
   var id = req.params.id;
-  var originalEmployee = employees.findObject({'identifier': id});
+  var originalEmployee = employees.find({'identifier': id});
 
   if(originalEmployee == null){
-    var message = " The employee with Id: " + id + " was not found.";
-    console.log(message);
-    res.render("../views/employee/error", {error: message});
+    showErrorPage("The employee with Id: " + id + " was not found.", res);
+    
   }else{
     //Parse PUT body and replace values in the original employee
   var replaceEmployee = req.body;
 
-  for (var attribute in replaceEmployee){
+  var replaceEmployeeDict = {};
+
+
+  var validDateUpdate = true;
+  var validRoleUpdate = true;
+
+  
+  for (var attribute in originalEmployee[0]) {
+  
+    
     var replacementAttribute = replaceEmployee[attribute];
     console.log(attribute+": " + replacementAttribute);
+    
 
-    if (replaceEmployee.hasOwnProperty(attribute) && originalEmployee.hasOwnProperty(attribute)) {
+        if(attribute == "role"){
 
-        onlyOneCEO(replacementAttribute, res);
+            validRoleUpdate = validRole(replacementAttribute, res);
+            
+        }
+        
         if(attribute == "hireDate"){
-          validDate(replacementAttribute, res);
+
+            validDateUpdate = validDate(replacementAttribute, res);
+            
         }
 
-      originalEmployee[attribute] = replacementAttribute;
+      
+  
+  if((attribute != "meta" && attribute != "$loki")){
+    if (replacementAttribute != originalEmployee[0][attribute] ) {
+      
+      if(typeof replacementAttribute == 'undefined'){
+        
+        replaceEmployeeDict[attribute] = originalEmployee[0][attribute];
+      }else{
+       
+        replaceEmployeeDict[attribute] = replacementAttribute;
+      }
+      
+      
+    }else{
+      console.log(replacementAttribute); 
+      replaceEmployeeDict[attribute] = originalEmployee[0][attribute];
+    }
   }
-
   }
-  employees.update(originalEmployee);
-  res.render("../views/employee/update", {employee: originalEmployee});
-  return res.send(employees.find({"identifier": id}));
+  if(validRoleUpdate && validDateUpdate){
+    console.log(replaceEmployeeDict); 
+    employees.findAndRemove({'identifier': id});
+    
+    employees.insert(replaceEmployeeDict);
+    var updatedEmployee = employees.find({'identifier': id})
+    res.render("../views/employee/show", {employee: updatedEmployee[0]});
+  }
+  
+  //return res.send(employees.find({"identifier": id}));
   }
 
 

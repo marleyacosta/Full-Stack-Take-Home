@@ -7,15 +7,13 @@
     "start": "node app"
   },
   "dependencies": {
-    "bluebird": "^3.7.2",
     "ejs": "^3.0.1",
     "express": "^4.16.4",
-    "level": "^6.0.0",
+    "express-validator": "^6.3.1",
     "lokijs": "^1.5.8",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "shortid": "^2.2.15",
-    "sqlite": "^3.0.3",
-    "sync-request": "^6.1.0"
+    "sleep": "^6.1.0"
   }
 }
